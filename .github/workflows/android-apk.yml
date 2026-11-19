@@ -15,7 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract source archive if supplied
+      - name: Extract source archive and apply AZURA improvements
         shell: bash
         run: |
           if [ -f AZURA-Gallery-rebranded.zip ]; then
@@ -23,6 +23,9 @@ jobs:
             if [ -d PrismGallery-master ]; then
               cp -a PrismGallery-master/. .
             fi
+          fi
+          if [ -f patches/azura-optimization.patch.gz ]; then
+            gzip -dc patches/azura-optimization.patch.gz | git apply
           fi
           test -f settings.gradle.kts
           test -f app/build.gradle.kts
