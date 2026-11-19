@@ -29,6 +29,21 @@ jobs:
           test -f gradlew
           chmod +x gradlew
 
+      - name: Package extracted source for review
+        shell: bash
+        run: |
+          tar -czf /tmp/AZURA-extracted-source.tar.gz \
+            --exclude=.git --exclude=.gradle --exclude='*/build' \
+            --exclude=AZURA-Gallery-rebranded.zip .
+
+      - name: Upload extracted source
+        uses: actions/upload-artifact@v4
+        with:
+          name: AZURA-extracted-source
+          path: /tmp/AZURA-extracted-source.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
