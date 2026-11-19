@@ -12,8 +12,18 @@ jobs:
   build-apk:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
+      - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Extract source archive if supplied
+        run: |
+          if [ -f AZURA-Gallery-rebranded.zip ]; then
+            unzip -q -o AZURA-Gallery-rebranded.zip
+            if [ -d PrismGallery-master ]; then
+              cp -a PrismGallery-master/. .
+            fi
+          fi
+          test -f settings.gradle.kts
+          test -f app/build.gradle.kts
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -23,9 +33,9 @@ jobs:
         uses: android-actions/setup-android@v3
       - name: Install Android SDK packages
         run: sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
-      - name: Build debug APK
+      - name: Build APK
         run: ./gradlew --no-daemon assembleDebug
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AZURA-debug-apk
