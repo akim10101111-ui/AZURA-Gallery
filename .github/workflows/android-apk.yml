@@ -27,9 +27,15 @@ jobs:
           if [ -f patches/azura-optimization.patch.gz ]; then
             gzip -dc patches/azura-optimization.patch.gz | git apply
           fi
+          if [ -f patches/azura-collections-logo.patch.gz ]; then
+            gzip -dc patches/azura-collections-logo.patch.gz | git apply
+          fi
           test -f settings.gradle.kts
           test -f app/build.gradle.kts
           test -f gradlew
+          test -s app/src/main/res/drawable-nodpi/azura_logo.webp
+          test -s app/src/main/res/drawable-nodpi/azura_logo_monochrome.png
+          ! grep -q 'android.permission.INTERNET' app/src/main/AndroidManifest.xml
           chmod +x gradlew
 
       - name: Package extracted source for review
