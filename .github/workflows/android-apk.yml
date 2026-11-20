@@ -39,16 +39,16 @@ jobs:
           app = Path('app/src/main/java/com/azura/gallery/AzuraApp.kt')
           s = app.read_text()
           s = s.replace('totalRam >= 6 * gb -> PerformanceProfile.HIGH', 'totalRam >= 8 * gb -> PerformanceProfile.HIGH')
-          s = s.replace('PerformanceProfile.HIGH -> 6\\n            PerformanceProfile.ULTRA -> 8', 'PerformanceProfile.HIGH -> 4\\n            PerformanceProfile.ULTRA -> 5')
-          s = s.replace('val enableCrossfade = performanceProfile == PerformanceProfile.HIGH || performanceProfile == PerformanceProfile.ULTRA', '// Avoid costly transition rendering while scrolling large photo grids.\\n        val enableCrossfade = performanceProfile == PerformanceProfile.ULTRA')
+          s = s.replace('PerformanceProfile.HIGH -> 6\n            PerformanceProfile.ULTRA -> 8', 'PerformanceProfile.HIGH -> 4\n            PerformanceProfile.ULTRA -> 5')
+          s = s.replace('val enableCrossfade = performanceProfile == PerformanceProfile.HIGH || performanceProfile == PerformanceProfile.ULTRA', '// Avoid costly transition rendering while scrolling large photo grids.\n        val enableCrossfade = performanceProfile == PerformanceProfile.ULTRA')
           app.write_text(s)
           info = Path('app/src/main/java/com/azura/gallery/ui/screens/OneUiScreens.kt')
           s = info.read_text()
           if 'import androidx.compose.foundation.Image' not in s:
-              s = s.replace('import androidx.compose.foundation.background', 'import androidx.compose.foundation.Image\\nimport androidx.compose.foundation.background', 1)
+              s = s.replace('import androidx.compose.foundation.background', 'import androidx.compose.foundation.Image\nimport androidx.compose.foundation.background', 1)
           if 'import androidx.compose.ui.res.painterResource' not in s:
-              s = s.replace('import androidx.compose.ui.platform.LocalContext', 'import androidx.compose.ui.res.painterResource\\nimport androidx.compose.ui.platform.LocalContext', 1)
-          marker = '    Card {\\n        rows.forEachIndexed { index, (title, value) ->\\n            if (index > 0) Divider(start = 22.dp)'
+              s = s.replace('import androidx.compose.ui.platform.LocalContext', 'import androidx.compose.ui.res.painterResource\nimport androidx.compose.ui.platform.LocalContext', 1)
+          marker = '    Card {\n        rows.forEachIndexed { index, (title, value) ->\n            if (index > 0) Divider(start = 22.dp)'
           lines = [
               '    Card {',
               '        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {',
@@ -59,7 +59,7 @@ jobs:
               '        rows.forEachIndexed { index, (title, value) ->',
               '            if (index > 0) Divider(start = 22.dp)'
           ]
-          replacement = '\\n'.join(lines)
+          replacement = '\n'.join(lines)
           if marker not in s:
               raise SystemExit('Info screen insertion point missing')
           info.write_text(s.replace(marker, replacement, 1))
