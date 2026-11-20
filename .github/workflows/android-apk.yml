@@ -143,7 +143,9 @@ jobs:
             test "$min_sdk" = "29"
             test "$target_sdk" = "34"
           done
-          apksigner verify --verbose app/build/outputs/apk/debug/app-debug.apk
+          signer="$ANDROID_HOME/build-tools/34.0.0/apksigner"
+          test -x "$signer"
+          "$signer" verify --verbose app/build/outputs/apk/debug/app-debug.apk
 
       - name: Package Android Studio project
         shell: bash
