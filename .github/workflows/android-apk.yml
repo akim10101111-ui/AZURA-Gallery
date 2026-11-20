@@ -15,21 +15,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract source archive and apply AZURA improvements
+      - name: Extract source and apply AZURA patches
         shell: bash
         run: |
-          if [ -f AZURA-Gallery-rebranded.zip ]; then
-            unzip -q -o AZURA-Gallery-rebranded.zip
-            if [ -d PrismGallery-master ]; then
-              cp -a PrismGallery-master/. .
-            fi
+          unzip -q -o AZURA-Gallery-rebranded.zip
+          if [ -d PrismGallery-master ]; then
+            cp -a PrismGallery-master/. .
           fi
-          if [ -f patches/azura-optimization.patch.gz ]; then
-            gzip -dc patches/azura-optimization.patch.gz | git apply
-          fi
-          if [ -f patches/azura-collections-logo.patch.gz ]; then
-            gzip -dc patches/azura-collections-logo.patch.gz | git apply
-          fi
+          gzip -dc patches/azura-optimization.patch.gz | git apply
+          gzip -dc patches/azura-collections-logo.patch.gz | git apply
+          mkdir -p app/src/main/res/drawable-nodpi
+          cp app/src/main/res/drawable-nodpi/azura_logo.webp PrismGallery-master/app/src/main/res/drawable-nodpi/
+          cp app/src/main/res/drawable-nodpi/azura_logo_monochrome.png PrismGallery-master/app/src/main/res/drawable-nodpi/
+          cp app/src/main/res/drawable-nodpi/azura_logo.webp app/src/main/res/drawable-nodpi/azura_logo_monochrome.png PrismGallery-master/app/src/main/res/drawable-nodpi/
           test -f settings.gradle.kts
           test -f app/build.gradle.kts
           test -f gradlew
@@ -37,21 +35,44 @@ jobs:
           test -s app/src/main/res/drawable-nodpi/azura_logo_monochrome.png
           ! grep -q 'android.permission.INTERNET' app/src/main/AndroidManifest.xml
           chmod +x gradlew
-
-      - name: Package extracted source for review
-        shell: bash
-        run: |
-          tar -czf /tmp/AZURA-extracted-source.tar.gz \
-            --exclude=.git --exclude=.gradle --exclude='*/build' \
-            --exclude=AZURA-Gallery-rebranded.zip .
-
-      - name: Upload extracted source
-        uses: actions/upload-artifact@v4
-        with:
-          name: AZURA-extracted-source
-          path: /tmp/AZURA-extracted-source.tar.gz
-          if-no-files-found: error
-          retention-days: 7
+          python3 - <<'PY'
+          from pathlib import Path
+          app = Path('app/src/main/java/com/azura/gallery/AzuraApp.kt')
+          s = app.read_text()
+          s = s.replace('totalRam >= 6 * gb -> PerformanceProfile.HIGH', 'totalRam >= 8 * gb -> PerformanceProfile.HIGH')
+          s = s.replace('PerformanceProfile.HIGH -> 6\\n            PerformanceProfile.ULTRA -> 8', 'PerformanceProfile.HIGH -> 4\\n            PerformanceProfile.ULTRA -> 5')
+          s = s.replace('val enableCrossfade = performanceProfile == PerformanceProfile.HIGH || performanceProfile == PerformanceProfile.ULTRA', '// Avoid costly transition rendering while scrolling large photo grids.\\n        val enableCrossfade = performanceProfile == PerformanceProfile.ULTRA')
+          app.write_text(s)
+          info = Path('app/src/main/java/com/azura/gallery/ui/screens/OneUiScreens.kt')
+          s = info.read_text()
+          if 'import androidx.compose.foundation.Image' not in s:
+              s = s.replace('import androidx.compose.foundation.background', 'import androidx.compose.foundation.Image\\nimport androidx.compose.foundation.background', 1)
+          if 'import androidx.compose.ui.res.painterResource' not in s:
+              s = s.replace('import androidx.compose.ui.platform.LocalContext', 'import androidx.compose.ui.res.painterResource\\nimport androidx.compose.ui.platform.LocalContext', 1)
+          marker = '    Card {\\n        rows.forEachIndexed { index, (title, value) ->\\n            if (index > 0) Divider(start = 22.dp)'
+          replacement = '''    Card {
+        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            Image(
+                painter = painterResource(id = com.azura.gallery.R.drawable.azura_logo),
+                contentDescription = "AZURA",
+                modifier = Modifier.padding(top = 24.dp, bottom = 8.dp).size(72.dp)
+            )
+            Text("AZURA", color = LocalAppTheme.current.palette.onBackground, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
+            Text("Gallery", color = LocalAppTheme.current.palette.accent, fontSize = 14.sp, modifier = Modifier.padding(bottom = 18.dp))
+        }
+        rows.forEachIndexed { index, (title, value) ->
+            if (index > 0) Divider(start = 22.dp)'''
+          if marker not in s:
+              raise SystemExit('InfoContent insert point missing')
+          info.write_text(s.replace(marker, replacement, 1))
+          # Use the AZURA artwork as the foreground and proper monochrome layer on all design launchers.
+          for xml in Path('app/src/main/res/mipmap-anydpi').glob('ic_launcher*.xml'):
+              t = xml.read_text().replace('@drawable/azura_aperture', '@drawable/azura_logo')
+              t = t.replace('<monochrome android:drawable="@drawable/azura_logo" />', '<monochrome android:drawable="@drawable/azura_logo_monochrome" />')
+              t = t.replace('<monochrome android:drawable="@drawable/azura_logo"/>', '<monochrome android:drawable="@drawable/azura_logo_monochrome"/>')
+              xml.write_text(t)
+          print('Logo, launcher resources, editor discoverability context, and low-jank defaults patched.')
+          PY
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -68,8 +89,11 @@ jobs:
       - name: Install Android SDK packages
         run: sdkmanager --install 'platforms;android-34' 'build-tools;34.0.0'
 
-      - name: Build Debug APK
-        run: ./gradlew --no-daemon --stacktrace assembleDebug
+      - name: Run unit tests
+        run: ./gradlew --no-daemon --stacktrace testDebugUnitTest
+
+      - name: Build Debug and Release variants
+        run: ./gradlew --no-daemon --stacktrace assembleDebug assembleRelease
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
@@ -78,3 +102,22 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 14
+
+      - name: Upload unsigned Release APK for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: AZURA-release-unsigned
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Verify APK package and installability metadata
+        shell: bash
+        run: |
+          for apk in app/build/outputs/apk/debug/*.apk app/build/outputs/apk/release/*.apk; do
+            test -s "$apk"
+            echo "APK: $apk"
+            apkanalyzer manifest application-id "$apk"
+            apkanalyzer manifest min-sdk "$apk"
+            apkanalyzer manifest target-sdk "$apk"
+          done
