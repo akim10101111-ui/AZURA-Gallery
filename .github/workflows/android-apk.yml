@@ -24,17 +24,20 @@ jobs:
           fi
           gzip -dc patches/azura-optimization.patch.gz | git apply
           gzip -dc patches/azura-collections-logo.patch.gz | git apply
+          gzip -dc patches/azura-brand-social.patch.gz | git apply
           mkdir -p app/src/main/res/drawable-nodpi
-          cp app/src/main/res/drawable-nodpi/azura_logo.webp PrismGallery-master/app/src/main/res/drawable-nodpi/
+          test -s brand/azura_logo.webp
+          cp brand/azura_logo.webp app/src/main/res/drawable-nodpi/azura_logo.webp
+          rm -f app/src/main/res/drawable-nodpi/azura_aperture.png
           test -f settings.gradle.kts
           test -f app/build.gradle.kts
           test -f gradlew
           test -s app/src/main/res/drawable-nodpi/azura_logo.webp
           ! grep -q 'android.permission.INTERNET' app/src/main/AndroidManifest.xml
+          ! grep -RqiE 'Prism Gallery|PrismGallery|Prism' app/src/main
           chmod +x gradlew
           python3 - <<'PY'
           from pathlib import Path
-          import textwrap
           app = Path('app/src/main/java/com/azura/gallery/AzuraApp.kt')
           s = app.read_text()
           s = s.replace('totalRam >= 6 * gb -> PerformanceProfile.HIGH', 'totalRam >= 8 * gb -> PerformanceProfile.HIGH')
@@ -77,19 +80,6 @@ jobs:
           print('AZURA performance, logo, launcher icon and info screen patch applied.')
           PY
 
-      - name: Export patched source for AZURA audit
-        uses: actions/upload-artifact@v4
-        with:
-          name: AZURA-source-audit
-          path: |
-            app/
-            gradle/
-            gradlew
-            gradle.properties
-            settings.gradle.kts
-            build.gradle.kts
-          retention-days: 2
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -105,11 +95,11 @@ jobs:
       - name: Install Android SDK packages
         run: sdkmanager --install 'platforms;android-34' 'build-tools;34.0.0'
 
-      - name: Run unit tests
-        run: ./gradlew --no-daemon --stacktrace testDebugUnitTest
+      - name: Run unit tests and Android lint
+        run: ./gradlew --no-daemon --stacktrace clean testDebugUnitTest lintDebug
 
-      - name: Build Debug and Release variants
-        run: ./gradlew --no-daemon --stacktrace assembleDebug assembleRelease
+      - name: Build Debug, Release and App Bundle
+        run: ./gradlew --no-daemon --stacktrace assembleDebug assembleRelease bundleRelease
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
@@ -127,12 +117,42 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Verify APK metadata
+      - name: Upload Release App Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: AZURA-release-aab-unsigned
+          path: app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Verify APK metadata and debug signature
         shell: bash
         run: |
           for apk in app/build/outputs/apk/debug/*.apk app/build/outputs/apk/release/*.apk; do
             test -s "$apk"
-            apkanalyzer manifest application-id "$apk"
-            apkanalyzer manifest min-sdk "$apk"
-            apkanalyzer manifest target-sdk "$apk"
+            app_id="$(apkanalyzer manifest application-id "$apk")"
+            min_sdk="$(apkanalyzer manifest min-sdk "$apk")"
+            target_sdk="$(apkanalyzer manifest target-sdk "$apk")"
+            echo "$apk: applicationId=$app_id minSdk=$min_sdk targetSdk=$target_sdk"
+            test "$app_id" = "com.azura.gallery"
+            test "$min_sdk" = "29"
+            test "$target_sdk" = "34"
           done
+          apksigner verify --verbose app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Package Android Studio project
+        shell: bash
+        run: |
+          zip -qr AZURA-AndroidStudio-Project.zip \
+            README.md .gitignore keystore.properties.example \
+            gradle gradlew gradlew.bat gradle.properties \
+            settings.gradle.kts build.gradle.kts app ruStore patches brand \
+            -x 'app/build/*' 'app/.gradle/*' '**/.DS_Store'
+
+      - name: Upload Android Studio project
+        uses: actions/upload-artifact@v4
+        with:
+          name: AZURA-AndroidStudio-Project
+          path: AZURA-AndroidStudio-Project.zip
+          if-no-files-found: error
+          retention-days: 14
