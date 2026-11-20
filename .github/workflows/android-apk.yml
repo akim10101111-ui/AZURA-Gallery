@@ -67,7 +67,14 @@ jobs:
               t = t.replace('<monochrome android:drawable="@drawable/azura_logo" />', '<monochrome android:drawable="@drawable/azura_logo" />')
               t = t.replace('<monochrome android:drawable="@drawable/azura_logo"/>', '<monochrome android:drawable="@drawable/azura_logo_monochrome"/>')
               xml.write_text(t)
-          # Remove the problematic monochrome PNG resource after applying patches.\n          mono = Path('app/src/main/res/drawable-nodpi/azura_logo_monochrome.png')\n          if mono.exists():\n              mono.unlink()\n          for xml in Path('app/src/main/res/mipmap-anydpi').glob('ic_launcher*.xml'):\n              t = xml.read_text().replace('@drawable/azura_logo_monochrome', '@drawable/azura_logo')\n              xml.write_text(t)\n          print('AZURA performance, logo, launcher icon and info screen patch applied.')
+          # Remove the problematic monochrome PNG resource after applying patches.
+          mono = Path('app/src/main/res/drawable-nodpi/azura_logo_monochrome.png')
+          if mono.exists():
+              mono.unlink()
+          for xml in Path('app/src/main/res/mipmap-anydpi').glob('ic_launcher*.xml'):
+              t = xml.read_text().replace('@drawable/azura_logo_monochrome', '@drawable/azura_logo')
+              xml.write_text(t)
+          print('AZURA performance, logo, launcher icon and info screen patch applied.')
           PY
 
       - name: Set up JDK 17
