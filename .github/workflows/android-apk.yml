@@ -25,12 +25,11 @@ jobs:
           gzip -dc patches/azura-optimization.patch.gz | git apply
           gzip -dc patches/azura-collections-logo.patch.gz | git apply
           mkdir -p app/src/main/res/drawable-nodpi
-          cp app/src/main/res/drawable-nodpi/azura_logo.webp app/src/main/res/drawable-nodpi/azura_logo_monochrome.png PrismGallery-master/app/src/main/res/drawable-nodpi/
+          cp app/src/main/res/drawable-nodpi/azura_logo.webp PrismGallery-master/app/src/main/res/drawable-nodpi/
           test -f settings.gradle.kts
           test -f app/build.gradle.kts
           test -f gradlew
           test -s app/src/main/res/drawable-nodpi/azura_logo.webp
-          test -s app/src/main/res/drawable-nodpi/azura_logo_monochrome.png
           ! grep -q 'android.permission.INTERNET' app/src/main/AndroidManifest.xml
           chmod +x gradlew
           python3 - <<'PY'
@@ -65,7 +64,7 @@ jobs:
           info.write_text(s.replace(marker, replacement, 1))
           for xml in Path('app/src/main/res/mipmap-anydpi').glob('ic_launcher*.xml'):
               t = xml.read_text().replace('@drawable/azura_aperture', '@drawable/azura_logo')
-              t = t.replace('<monochrome android:drawable="@drawable/azura_logo" />', '<monochrome android:drawable="@drawable/azura_logo_monochrome" />')
+              t = t.replace('<monochrome android:drawable="@drawable/azura_logo" />', '<monochrome android:drawable="@drawable/azura_logo" />')
               t = t.replace('<monochrome android:drawable="@drawable/azura_logo"/>', '<monochrome android:drawable="@drawable/azura_logo_monochrome"/>')
               xml.write_text(t)
           print('AZURA performance, logo, launcher icon and info screen patch applied.')
