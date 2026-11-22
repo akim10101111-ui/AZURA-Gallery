@@ -132,7 +132,8 @@ jobs:
               s = s.replace('internal const val APP_FULL_NAME = "AZURA Gallery"', 'internal const val APP_FULL_NAME = "Gallery"')
               s = s.replace('Triple("Telegram", Icons.AutoMirrored.Rounded.Send, "https://t.me/")', 'Triple("Telegram", Icons.AutoMirrored.Rounded.Send, "https://t.me/AZURAGalley")')
               s = s.replace('Triple("MAX", Icons.Rounded.Forum, "https://max.ru/")', 'Triple("MAX", Icons.Rounded.Forum, "https://max.ru/join/5IMBDNNMCur_L5zhLjR0mMXtZltlnopZ3wIuTK8Ip584")')
-              nl = chr(10)\n              old_click = 'runCatching {' + nl + '                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(link.third)))' + nl + '                            }'
+              nl = chr(10)
+              old_click = 'runCatching {' + nl + '                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(link.third)))' + nl + '                            }'
               s = s.replace(old_click, 'openGallerySocialLink(context, link.first, link.third)')
               s = s.replace('Text("AZURA Gallery", color = palette.textMuted', 'Text("Gallery", color = palette.textMuted')
               s = s.replace('contentDescription = "AZURA Gallery"', 'contentDescription = "Gallery"')
@@ -158,7 +159,7 @@ jobs:
                       '}',
                       ''
                   ]
-                  s += "\\n".join(helper)
+                  s += nl.join(helper)
               s = s.replace('import android.content.Intent\\n', '').replace('import android.net.Uri\\n', '')
               menu.write_text(s)
           strings = Path('app/src/main/java/com/azura/gallery/ui/i18n/Strings.kt')
