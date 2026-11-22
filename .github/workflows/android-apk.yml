@@ -166,7 +166,7 @@ jobs:
               if p.exists():
                   s = p.read_text().replace('AZURA Gallery', 'Gallery').replace('Text("AZURA"', 'Text("Gallery"').replace('contentDescription = "AZURA"', 'contentDescription = "Gallery"')
                   p.write_text(s)
-                    strings = Path('app/src/main/java/com/azura/gallery/ui/i18n/Strings.kt')
+          strings = Path('app/src/main/java/com/azura/gallery/ui/i18n/Strings.kt')
           if strings.exists():
               strings.write_text(strings.read_text().replace('AZURA Gallery', 'Gallery').replace('AZURA', 'Gallery'))
           for p in [Path('app/src/main/res/values/strings.xml'), Path('app/src/main/res/values-ru/strings.xml')]:
