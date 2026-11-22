@@ -171,8 +171,8 @@ jobs:
           perf = Path('app/src/main/java/com/azura/gallery/AzuraApp.kt')
           if perf.exists():
               s = perf.read_text()
-              s = s.replace('PerformanceProfile.HIGH -> 4\\n            PerformanceProfile.ULTRA -> 6', 'PerformanceProfile.HIGH -> 3\\n            PerformanceProfile.ULTRA -> 4')
-              s = s.replace('PerformanceProfile.HIGH -> 0.20\\n            PerformanceProfile.ULTRA -> 0.25', 'PerformanceProfile.HIGH -> 0.18\\n            PerformanceProfile.ULTRA -> 0.22')
+              s = s.replace('PerformanceProfile.HIGH -> 4' + nl + '            PerformanceProfile.ULTRA -> 6', 'PerformanceProfile.HIGH -> 3' + nl + '            PerformanceProfile.ULTRA -> 4')
+              s = s.replace('PerformanceProfile.HIGH -> 0.20' + nl + '            PerformanceProfile.ULTRA -> 0.25', 'PerformanceProfile.HIGH -> 0.18' + nl + '            PerformanceProfile.ULTRA -> 0.22')
               s = s.replace('val enableCrossfade = performanceProfile == PerformanceProfile.HIGH || performanceProfile == PerformanceProfile.ULTRA', 'val enableCrossfade = performanceProfile == PerformanceProfile.ULTRA')
               perf.write_text(s)
           thumb = Path('app/src/main/java/com/azura/gallery/data/ThumbnailManager.kt')
