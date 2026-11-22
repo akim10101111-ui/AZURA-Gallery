@@ -190,126 +190,43 @@ jobs:
           print('Gallery branding, links and performance fixes applied')
           PY
 
-      - name: Remove thank-you footer, tune thumbnail caches and redraw icon
+      - name: Remove thank-you footer, tune cache budgets and redraw icon
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
-
           menu = Path('app/src/main/java/com/azura/gallery/ui/screens/MenuScreen.kt')
-          source = menu.read_text()
-          source, call_count = re.subn(r'^\\s*AzuraThanksFooter\\(\\)\\s*        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v4
-        with:
-          packages: 'platform-tools'
-          log-accepted-android-sdk-licenses: false
-
-      - name: Install Android SDK packages
-        run: sdkmanager --install 'platforms;android-34' 'build-tools;34.0.0'
-
-      - name: Run unit tests
-        run: ./gradlew --no-daemon --stacktrace clean testDebugUnitTest
-
-      - name: Build Debug, Release and App Bundle
-        run: ./gradlew --no-daemon --stacktrace assembleDebug assembleRelease bundleRelease
-
-      - name: Upload Debug APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: AZURA-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Upload unsigned Release APK for review
-        uses: actions/upload-artifact@v4
-        with:
-          name: AZURA-release-unsigned
-          path: app/build/outputs/apk/release/*.apk
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Upload Release App Bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: AZURA-release-aab-unsigned
-          path: app/build/outputs/bundle/release/*.aab
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Verify APK metadata and debug signature
-        shell: bash
-        run: |
-          for apk in app/build/outputs/apk/debug/*.apk app/build/outputs/apk/release/*.apk; do
-            test -s "$apk"
-            app_id="$(apkanalyzer manifest application-id "$apk")"
-            min_sdk="$(apkanalyzer manifest min-sdk "$apk")"
-            target_sdk="$(apkanalyzer manifest target-sdk "$apk")"
-            echo "$apk: applicationId=$app_id minSdk=$min_sdk targetSdk=$target_sdk"
-            test "$app_id" = "com.azura.gallery"
-            test "$min_sdk" = "29"
-            test "$target_sdk" = "34"
-          done
-          signer="$ANDROID_HOME/build-tools/34.0.0/apksigner"
-          test -x "$signer"
-          "$signer" verify --verbose app/build/outputs/apk/debug/app-debug.apk
-
-      - name: Package Android Studio project
-        shell: bash
-        run: |
-          zip -qr AZURA-AndroidStudio-Project.zip \
-            README.md .gitignore keystore.properties.example \
-            gradle gradlew gradlew.bat gradle.properties \
-            settings.gradle.kts build.gradle.kts app ruStore patches brand \
-            -x 'app/build/*' 'app/.gradle/*' '**/.DS_Store'
-
-      - name: Upload Android Studio project
-        uses: actions/upload-artifact@v4
-        with:
-          name: AZURA-AndroidStudio-Project
-          path: AZURA-AndroidStudio-Project.zip
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Run Android lint
-        run: ./gradlew --no-daemon --stacktrace lintDebug
-, '', source, count=1, flags=re.M)
-          source, function_count = re.subn(r'/\\*\\* The small developer/contact panel.*?private fun openGallerySocialLink', 'private fun openGallerySocialLink', source, count=1, flags=re.S)
-          if call_count != 1 or function_count != 1:
-              raise SystemExit(f'Footer removal checks failed: call={call_count}, function={function_count}')
-          menu.write_text(source)
-
-          # Keep decode and cache budgets lower to reduce memory pressure on large libraries.
+          rows = menu.read_text().splitlines()
+          call_indices = [i for i, line in enumerate(rows) if line.strip() == 'AzuraThanksFooter()']
+          starts = [i for i, line in enumerate(rows) if line.strip().startswith('/** The small developer/contact panel')]
+          ends = [i for i, line in enumerate(rows) if line.strip().startswith('private fun openGallerySocialLink')]
+          if len(call_indices) != 1 or len(starts) != 1 or len(ends) != 1 or ends[0] <= starts[0]:
+              raise SystemExit('Could not safely identify settings footer block')
+          del rows[starts[0]:ends[0]]
+          rows = [line for line in rows if line.strip() != 'AzuraThanksFooter()']
+          menu.write_text('\n'.join(rows) + '\n')
           app = Path('app/src/main/java/com/azura/gallery/AzuraApp.kt')
           source = app.read_text()
-          source = source.replace('PerformanceProfile.LOW -> 2\\n            PerformanceProfile.MEDIUM -> 3\\n            PerformanceProfile.HIGH -> 3\\n            PerformanceProfile.ULTRA -> 4',
-                              'PerformanceProfile.LOW -> 2\\n            PerformanceProfile.MEDIUM -> 2\\n            PerformanceProfile.HIGH -> 3\\n            PerformanceProfile.ULTRA -> 3')
-          source = source.replace('PerformanceProfile.LOW -> 0.12\\n            PerformanceProfile.MEDIUM -> 0.16\\n            PerformanceProfile.HIGH -> 0.18\\n            PerformanceProfile.ULTRA -> 0.22',
-                              'PerformanceProfile.LOW -> 0.10\\n            PerformanceProfile.MEDIUM -> 0.12\\n            PerformanceProfile.HIGH -> 0.14\\n            PerformanceProfile.ULTRA -> 0.18')
-          source = source.replace('PerformanceProfile.LOW, PerformanceProfile.MEDIUM -> 128L * 1024 * 1024\\n            else -> 256L * 1024 * 1024',
-                              'PerformanceProfile.LOW, PerformanceProfile.MEDIUM, PerformanceProfile.HIGH, PerformanceProfile.ULTRA -> 128L * 1024 * 1024')
+          source = source.replace('PerformanceProfile.MEDIUM -> 3', 'PerformanceProfile.MEDIUM -> 2')
+          source = source.replace('PerformanceProfile.LOW -> 0.12', 'PerformanceProfile.LOW -> 0.10')
+          source = source.replace('PerformanceProfile.MEDIUM -> 0.16', 'PerformanceProfile.MEDIUM -> 0.12')
+          source = source.replace('PerformanceProfile.HIGH -> 0.18', 'PerformanceProfile.HIGH -> 0.14')
+          source = source.replace('PerformanceProfile.ULTRA -> 0.22', 'PerformanceProfile.ULTRA -> 0.18')
+          source = source.replace('else -> 256L * 1024 * 1024', 'else -> 128L * 1024 * 1024')
           app.write_text(source)
-
           thumb = Path('app/src/main/java/com/azura/gallery/data/ThumbnailManager.kt')
           source = thumb.read_text()
           source = source.replace('PerformanceProfile.MEDIUM -> 128', 'PerformanceProfile.MEDIUM -> 120')
           source = source.replace('PerformanceProfile.HIGH -> 160', 'PerformanceProfile.HIGH -> 144')
           source = source.replace('PerformanceProfile.ULTRA -> 224', 'PerformanceProfile.ULTRA -> 180')
-          source = source.replace('PerformanceProfile.LOW -> 60\\n            PerformanceProfile.MEDIUM -> 70\\n            PerformanceProfile.HIGH -> 80\\n            PerformanceProfile.ULTRA -> 85',
-                              'PerformanceProfile.LOW -> 58\\n            PerformanceProfile.MEDIUM -> 65\\n            PerformanceProfile.HIGH -> 72\\n            PerformanceProfile.ULTRA -> 78')
-          source = source.replace('Dispatchers.IO.limitedParallelism(2)', 'Dispatchers.IO.limitedParallelism(1)')
+          source = source.replace('PerformanceProfile.LOW -> 60', 'PerformanceProfile.LOW -> 58')
+          source = source.replace('PerformanceProfile.MEDIUM -> 70', 'PerformanceProfile.MEDIUM -> 65')
+          source = source.replace('PerformanceProfile.HIGH -> 80', 'PerformanceProfile.HIGH -> 72')
+          source = source.replace('PerformanceProfile.ULTRA -> 85', 'PerformanceProfile.ULTRA -> 78')
           thumb.write_text(source)
-
           logo = '''<?xml version="1.0" encoding="utf-8"?>
           <vector xmlns:android="http://schemas.android.com/apk/res/android"
-              android:width="108dp" android:height="108dp"
-              android:viewportWidth="108" android:viewportHeight="108">
+              android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
               <path android:strokeColor="#101318" android:strokeWidth="4.5" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000" android:pathData="M54,7 A47,47 0 1 1 54,101 A47,47 0 1 1 54,7 Z"/>
               <path android:strokeColor="#101318" android:strokeWidth="4.5" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000" android:pathData="M70,27 A8,8 0 1 1 70,43 A8,8 0 1 1 70,27 Z"/>
               <path android:strokeColor="#101318" android:strokeWidth="4.5" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000" android:pathData="M19,70 C29,61 38,56 46,58 C52,61 57,67 62,70 C70,64 78,60 89,66"/>
@@ -317,9 +234,10 @@ jobs:
           </vector>
           '''
           Path('app/src/main/res/drawable/azura_logo.xml').write_text(logo)
-          print('Removed thank-you footer; tuned image caches and thumbnail pre-index; replaced logo vector.')
+          if 'AzuraThanksFooter()' in menu.read_text() or 'private fun AzuraThanksFooter' in menu.read_text():
+              raise SystemExit('Thank-you panel still exists')
+          print('Footer removed, cache limits tuned and logo resource replaced')
           PY
-          ! grep -RqiE 'AzuraThanksFooter|Большое спасибо|Thank you|Vielen Dank' app/src/main/java/com/azura/gallery/ui/screens/MenuScreen.kt
           test -s app/src/main/res/drawable/azura_logo.xml
 
       - name: Set up JDK 17
