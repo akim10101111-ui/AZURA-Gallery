@@ -36,12 +36,12 @@ jobs:
           <vector xmlns:android="http://schemas.android.com/apk/res/android"
               android:width="108dp" android:height="108dp"
               android:viewportWidth="108" android:viewportHeight="108">
-              <path android:fillColor="#0B0D11" android:pathData="M54,6A48,48 0,1 1,54 102A48,48 0,1 1,54 6Z"/>
-              <path android:fillColor="#F8FAFC" android:pathData="M54,12A42,42 0,1 1,54 96A42,42 0,1 0,1 0,1 54,12Z"/>
-              <path android:fillColor="#0B0D11" android:pathData="M70,26A9,9 0,1 1,70 44A9,9 0,1 1,70 26Z"/>
-              <path android:fillColor="#F8FAFC" android:pathData="M70,32A3,3 0,1 1,70 38A3,3 0,1 1,70 32Z"/>
-              <path android:strokeColor="#0B0D11" android:strokeWidth="4.5" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000" android:pathData="M15,72C24,62 33,57 40,58C49,59 56,68 62,72C66,75 70,76 74,73C80,66 85,63 90,67"/>
-              <path android:strokeColor="#0EA5E9" android:strokeWidth="2.5" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000" android:pathData="M19,69C28,62 34,59 40,60C45,61 50,65 54,69"/>
+              <path android:fillColor="#0B0D11" android:pathData="M54,6 A48,48 0 1 1 54,102 A48,48 0 1 1 54,6 Z"/>
+              <path android:fillColor="#F8FAFC" android:pathData="M54,12 A42,42 0 1 1 54,96 A42,42 0 1 1 54,12 Z"/>
+              <path android:fillColor="#0B0D11" android:pathData="M70,26 A9,9 0 1 1 70,44 A9,9 0 1 1 70,26 Z"/>
+              <path android:fillColor="#F8FAFC" android:pathData="M70,32 A3,3 0 1 1 70,38 A3,3 0 1 1 70,32 Z"/>
+              <path android:strokeColor="#0B0D11" android:strokeWidth="4.5" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000" android:pathData="M15,72 C24,62 33,57 40,58 C49,59 56,68 62,72 C66,75 70,76 74,73 C80,66 85,63 90,67"/>
+              <path android:strokeColor="#0EA5E9" android:strokeWidth="2.5" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000" android:pathData="M19,69 C28,62 34,59 40,60 C45,61 50,65 54,69"/>
           </vector>
           AZURA_VECTOR
           rm -f app/src/main/res/drawable-nodpi/azura_logo.webp
@@ -162,7 +162,11 @@ jobs:
                   s += nl.join(helper)
               s = s.replace('import android.content.Intent\\n', '').replace('import android.net.Uri\\n', '')
               menu.write_text(s)
-          strings = Path('app/src/main/java/com/azura/gallery/ui/i18n/Strings.kt')
+          for p in [Path('app/src/main/java/com/azura/gallery/ui/screens/GoogleScreens.kt'), Path('app/src/main/java/com/azura/gallery/ui/screens/HyperOsScreens.kt'), Path('app/src/main/java/com/azura/gallery/ui/screens/IosSettingsPages.kt'), Path('app/src/main/java/com/azura/gallery/ui/screens/OneUiScreens.kt')]:
+              if p.exists():
+                  s = p.read_text().replace('AZURA Gallery', 'Gallery').replace('Text("AZURA"', 'Text("Gallery"').replace('contentDescription = "AZURA"', 'contentDescription = "Gallery"')
+                  p.write_text(s)
+                    strings = Path('app/src/main/java/com/azura/gallery/ui/i18n/Strings.kt')
           if strings.exists():
               strings.write_text(strings.read_text().replace('AZURA Gallery', 'Gallery').replace('AZURA', 'Gallery'))
           for p in [Path('app/src/main/res/values/strings.xml'), Path('app/src/main/res/values-ru/strings.xml')]:
