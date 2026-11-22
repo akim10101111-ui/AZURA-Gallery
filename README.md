@@ -23,3 +23,6 @@
 ## Подпись Release
 
 Debug APK подписывается тестовым debug-сертификатом и предназначен для установки и проверки. Для публикации нужен собственный постоянный ключ подписи. Не используйте debug-ключ как ключ публикации и храните keystore в безопасном месте.
+
+
+Build verification is enforced in the GitHub Actions workflow after changes to the project files.
