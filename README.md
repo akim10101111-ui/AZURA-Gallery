@@ -26,3 +26,5 @@ Debug APK подписывается тестовым debug-сертификат
 
 
 Build verification is enforced in the GitHub Actions workflow after changes to the project files.
+
+CI build triggered to validate vector resource and display-name changes.
