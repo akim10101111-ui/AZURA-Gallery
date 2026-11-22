@@ -32,19 +32,19 @@ jobs:
           gzip -dc patches/azura-brand-social.patch.gz | git apply
           mkdir -p app/src/main/res/drawable app/src/main/res/drawable-nodpi
           cat > app/src/main/res/drawable/azura_logo.xml <<'AZURA_VECTOR'
-<?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp" android:height="108dp"
-    android:viewportWidth="1024" android:viewportHeight="1024">
-    <path android:fillColor="#0C0D10" android:pathData="M512,72A440,440 0,1 1,512 952A440,440 0,1 1,512 72Z"/>
-    <path android:fillColor="#F8F9FB" android:pathData="M512,126A386,386 0,1 1,512 898A386,386 0,1 1,512 126Z"/>
-    <path android:fillColor="#0C0D10" android:pathData="M724,252A76,76 0,1 0,724 404A76,76 0,1 0,724 252Z"/>
-    <path android:fillColor="#F8F9FB" android:pathData="M724,296A32,32 0,1 0,724 360A32,32 0,1 0,724 296Z"/>
-    <path android:strokeColor="#0C0D10" android:strokeWidth="42" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000" android:pathData="M142,684C230,606 289,558 350,562C426,567 480,638 539,684L614,733L701,665C757,610 810,603 832,626L898,678"/>
-    <path android:strokeColor="#00AEEF" android:strokeWidth="24" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000" android:pathData="M188,646C250,591 299,574 343,578C371,580 391,589 410,601"/>
-    <path android:strokeColor="#00AEEF" android:strokeWidth="26" android:strokeLineCap="round" android:fillColor="#00000000" android:pathData="M174,335C194,273 219,220 248,180"/>
-</vector>
-AZURA_VECTOR
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp" android:height="108dp"
+              android:viewportWidth="1024" android:viewportHeight="1024">
+              <path android:fillColor="#0C0D10" android:pathData="M512,72A440,440 0,1 1,512 952A440,440 0,1 1,512 72Z"/>
+              <path android:fillColor="#F8F9FB" android:pathData="M512,126A386,386 0,1 1,512 898A386,386 0,1 1,512 126Z"/>
+              <path android:fillColor="#0C0D10" android:pathData="M724,252A76,76 0,1 0,724 404A76,76 0,1 0,724 252Z"/>
+              <path android:fillColor="#F8F9FB" android:pathData="M724,296A32,32 0,1 0,724 360A32,32 0,1 0,724 296Z"/>
+              <path android:strokeColor="#0C0D10" android:strokeWidth="42" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000" android:pathData="M142,684C230,606 289,558 350,562C426,567 480,638 539,684L614,733L701,665C757,610 810,603 832,626L898,678"/>
+              <path android:strokeColor="#00AEEF" android:strokeWidth="24" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000" android:pathData="M188,646C250,591 299,574 343,578C371,580 391,589 410,601"/>
+              <path android:strokeColor="#00AEEF" android:strokeWidth="26" android:strokeLineCap="round" android:fillColor="#00000000" android:pathData="M174,335C194,273 219,220 248,180"/>
+          </vector>
+          AZURA_VECTOR
           rm -f app/src/main/res/drawable-nodpi/azura_logo.webp
           rm -f app/src/main/res/drawable-nodpi/azura_aperture.png
           test -f settings.gradle.kts
